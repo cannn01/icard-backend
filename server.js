@@ -9,19 +9,23 @@ app.use(express.json());
 
 app.use('/downloads', express.static(path.join(__dirname, 'public/downloads')));
 
-// Dữ liệu Profile đầy đủ
+// Profile cấu hình nâng cao
 let userProfile = {
   id: "candong",
   name: "Tô Đông Cẩn",
   title: "Data & Software Engineer",
   company: "Tech Architecture Team",
-  bio: "Chuyên phát triển hệ thống ETL, Data Pipeline & Ứng dụng Di động.",
+  greeting: "Chào bạn! Rất vui được gặp và kết nối cùng bạn hôm nay.",
+  gifUrl: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Z0N3J4ZHRxdWsybDNubHh4b2d5d3p0NmV0ZzEybzZ2czJzNWt6ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l3vR16pumsCYTCA4U/giphy.gif",
+  theme: "dark", // 'dark' | 'light' | 'gold'
   phone: "0901234567",
   email: "can.todong@example.com",
   github: "https://github.com",
   linkedin: "https://linkedin.com",
-  bankQr: "https://img.vietqr.io/image/970422-123456789-compact.png", // Demo VietQR
-  tags: ["Data Engineer", "React Native", "Docker", "SQL Server", "SSIS"]
+  zalo: "https://zalo.me/0901234567",
+  facebook: "https://facebook.com",
+  telegram: "https://t.me/candong",
+  tags: ["Data Engineer", "React Native", "Docker", "SQL Server"]
 };
 
 app.get('/api/profile/:id', (req, res) => res.json(userProfile));
@@ -31,11 +35,9 @@ app.post('/api/profile/:id', (req, res) => {
   res.json({ success: true, profile: userProfile });
 });
 
-// API Tải vCard lưu danh bạ
 app.get('/api/contact/:id/vcard', (req, res) => {
   const vCard = vCardsJS();
-  vCard.firstName = "Đông Cẩn";
-  vCard.lastName = "Tô";
+  vCard.firstName = userProfile.name;
   vCard.organization = userProfile.company;
   vCard.title = userProfile.title;
   vCard.workEmail = userProfile.email;
@@ -47,17 +49,13 @@ app.get('/api/contact/:id/vcard', (req, res) => {
   res.send(vCard.getFormattedString());
 });
 
-app.get('/api/version', (req, res) => {
-  res.json({
-    latestVersion: "1.0.1",
-    apkUrl: "/downloads/app-release.apk",
-    changeLog: "Cập nhật giao diện chuyên nghiệp và tính năng nâng cao"
-  });
-});
-
-// Web Viewer hiển thị công khai cực đẹp cho người nhận (Mobile-first UI)
+// Trang Web hiển thị công khai cho người nhận quét QR / NFC
 app.get('/p/:id', (req, res) => {
-  const tagsHtml = userProfile.tags.map(t => `<span class="tag">${t}</span>`).join('');
+  const isDark = userProfile.theme === 'dark';
+  const bgColor = isDark ? '#0F172A' : '#F8FAFC';
+  const cardColor = isDark ? '#1E293B' : '#FFFFFF';
+  const textColor = isDark ? '#F8FAFC' : '#0F172A';
+
   res.send(`
     <!DOCTYPE html>
     <html lang="vi">
@@ -67,53 +65,54 @@ app.get('/p/:id', (req, res) => {
       <title>${userProfile.name} - I-Card</title>
       <style>
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #F3F4F6; margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .card { background: white; border-radius: 24px; max-width: 400px; width: 100%; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-        .cover { height: 120px; background: linear-gradient(135deg, #4F46E5, #9333EA); }
-        .avatar-box { margin-top: -50px; text-align: center; }
-        .avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; object-fit: cover; }
-        .content { padding: 20px; text-align: center; }
-        .name { font-size: 22px; font-weight: 800; color: #111827; margin: 5px 0 0 0; }
-        .title { font-size: 14px; color: #4B5563; margin-top: 4px; font-weight: 500; }
-        .company { font-size: 13px; color: #6B7280; margin-top: 2px; }
-        .bio { font-size: 13px; color: #4B5563; margin: 12px 0; line-height: 1.4; background: #F9FAFB; padding: 10px; border-radius: 10px; }
-        .tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 20px; }
-        .tag { background: #EEF2FF; color: #4F46E5; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 600; }
-        .btn-save { background: #FACC15; color: #111827; font-weight: 700; padding: 14px; border-radius: 30px; text-decoration: none; display: block; width: 100%; font-size: 15px; box-shadow: 0 4px 12px rgba(250,204,21,0.4); }
-        .links-list { margin-top: 20px; text-align: left; }
-        .link-item { display: flex; align-items: center; padding: 12px; background: #F9FAFB; border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: #1F2937; font-weight: 600; font-size: 14px; }
-        .link-item span { margin-right: 10px; font-size: 18px; }
+        body { font-family: -apple-system, sans-serif; background: ${bgColor}; color: ${textColor}; margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .card { background: ${cardColor}; border-radius: 24px; max-width: 400px; width: 100%; padding: 20px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        .gif-avatar { width: 110px; height: 110px; border-radius: 50%; border: 3px solid #6366F1; object-fit: cover; }
+        .greeting-box { background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366F1; padding: 12px; border-radius: 8px; font-size: 13px; font-style: italic; margin: 15px 0; text-align: left; }
+        .btn-action { display: flex; align-items: center; justify-content: center; background: #6366F1; color: white; padding: 12px; border-radius: 12px; text-decoration: none; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        .btn-zalo { background: #0068FF; }
+        .btn-vcard { background: #EAB308; color: #0F172A; }
+        .location-info { font-size: 11px; opacity: 0.7; margin-top: 10px; }
       </style>
     </head>
     <body>
       <div class="card">
-        <div class="cover"></div>
-        <div class="avatar-box">
-          <img src="https://picsum.photos/200" class="avatar" />
-        </div>
-        <div class="content">
-          <h2 class="name">${userProfile.name}</h2>
-          <div class="title">${userProfile.title}</div>
-          <div class="company">🏢 ${userProfile.company}</div>
-          
-          <div class="bio">${userProfile.bio}</div>
-          <div class="tags">${tagsHtml}</div>
+        <img src="${userProfile.gifUrl}" class="gif-avatar" />
+        <h2 style="margin: 10px 0 2px 0;">${userProfile.name}</h2>
+        <div style="font-size: 14px; opacity: 0.8;">${userProfile.title}</div>
+        <div style="font-size: 12px; opacity: 0.6;">🏢 ${userProfile.company}</div>
 
-          <a href="/api/contact/${userProfile.id}/vcard" class="btn-save">👤+ Save Contact to Phone</a>
-
-          <div class="links-list">
-            <a href="tel:${userProfile.phone}" class="link-item"><span>📞</span> Gọi điện: ${userProfile.phone}</a>
-            <a href="https://zalo.me/${userProfile.phone}" class="link-item"><span>💬</span> Nhắn tin Zalo</a>
-            <a href="mailto:${userProfile.email}" class="link-item"><span>✉️</span> Gửi Email</a>
-            <a href="${userProfile.github}" target="_blank" class="link-item"><span>💻</span> Hồ sơ GitHub</a>
-            <a href="${userProfile.linkedin}" target="_blank" class="link-item"><span>💼</span> Hồ sơ LinkedIn</a>
-          </div>
+        <div class="greeting-box">
+          💬 <b>Lời chào:</b> "${userProfile.greeting}"
         </div>
+
+        <a href="/api/contact/${userProfile.id}/vcard" class="btn-action btn-vcard">👤 Save Contact to Phone</a>
+        
+        <a id="btnSendZalo" href="${userProfile.zalo}" target="_blank" class="btn-action btn-zalo">💬 Gửi lời chào lại qua Zalo</a>
+        <a id="btnSendMail" href="mailto:${userProfile.email}?subject=Kết nối I-Card&body=${encodeURIComponent(userProfile.greeting)}" class="btn-action">✉️ Gửi Email kết nối</a>
+
+        <div class="location-info" id="locText">📍 Đang định vị vị trí chạm...</div>
       </div>
+
+      <script>
+        // Tự động định vị GPS khi người nhận mở trang
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const locStr = " (Vị trí chạm: " + lat.toFixed(4) + ", " + lng.toFixed(4) + ")";
+            document.getElementById('locText').innerText = "📍 Vị trí chạm: " + lat.toFixed(4) + ", " + lng.toFixed(4);
+            
+            // Cập nhật link Zalo & Mail có đính kèm tọa độ vị trí
+            var mailBtn = document.getElementById('btnSendMail');
+            mailBtn.href = "mailto:${userProfile.email}?subject=Kết nối I-Card&body=" + encodeURIComponent("${userProfile.greeting}" + locStr);
+          });
+        }
+      </script>
     </body>
     </html>
   `);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Server I-Card Online tại Port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server I-Card nâng cấp chạy tại port ${PORT}`));
